@@ -53,8 +53,20 @@
 
     // add peaks
     var peaksGeoJSONUrl = './data/peaks.geojson';
-    new L.GeoJSON.AJAX(peaksGeoJSONUrl).addTo(map);
-    // TODO: bind peaks popup
+    new L.GeoJSON.AJAX(peaksGeoJSONUrl, {
+      onEachFeature: peaksPopup
+    }).addTo(map);
+
+    // show popup for peak
+    function peaksPopup(feature, layer) {
+      var props = feature.properties
+      var content;
+      if (props) {
+        content = '<a href="' + props.sp_url + '" target="_blank">' + props.name;
+        content += '</a>, ' + props.elevation + ' ft';
+        layer.bindPopup(content);
+      }
+    }
 
     // TODO: add trailheads
 
