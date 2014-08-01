@@ -1,81 +1,84 @@
 <html>
 <head>
   <meta charset=utf-8 />
-  <title>Switching basemaps</title>
+  <title>Sierra Peaks Map</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-
-  <!-- Load Leaflet from CDN-->
+  <!-- Load Leaflet CSS from CDN-->
   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-
-  <!-- Load Leaflet plugins from CDN -->
-  <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
-  <script src="http://rawgit.com/calvinmetcalf/leaflet-ajax/master/dist/leaflet.ajax.min.js"></script>
-
+  <!-- app css -->
   <style>
-    body {margin:0;padding:0;}
+    body {
+      margin:0;
+      padding:0;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 80%;
+    }
     #map {position: absolute;top:0;bottom:0;right:0;left:0;}
+    #basemaps-wrapper {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 10;
+      background: white;
+      padding: 10px;
+    }
+    #basemaps {
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
+  <div id="map"></div>
+  <div id="basemaps-wrapper" class="leaflet-bar">
+    Basemap: <select name="basemaps" id="basemaps">
+      <option value="Topographic">Topographic<options>
+      <option value="Imagery">Imagery<options>
+      <option value="Terrain">Terrain</option>
+      <option value="NationalGeographic">National Geographic<options>
+      <option value="Streets">Streets</option>
+    </select>
+  </div>
+  <!-- Load Leaflet and plugins from CDN -->
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
+  <script src="http://rawgit.com/calvinmetcalf/leaflet-ajax/master/dist/leaflet.ajax.min.js"></script>
+  <!-- app script -->
+  <script>
+  (function (L) {
+    // init map w/ basemap
+    var map = L.map('map').setView([36.5786, -118.2920], 14);
+    var basemapLayer = L.esri.basemapLayer('Topographic').addTo(map);
+    var basemapDropdown = document.getElementById('basemaps');
+    var basemapLabelsLayer;
 
-<style>
-  #basemaps-wrapper {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
-    background: white;
-    padding: 10px;
-  }
-  #basemaps {
-    margin-bottom: 5px;
-  }
-</style>
+    // add peaks
+    var peaksGeoJSONUrl = './data/peaks.geojson';
+    new L.GeoJSON.AJAX(peaksGeoJSONUrl).addTo(map);
+    // TODO: bind peaks popup
 
-<div id="map"></div>
+    // TODO: add trailheads
 
-<div id="basemaps-wrapper" class="leaflet-bar">
-  <select name="basemaps" id="basemaps">
-    <option value="Topographic">Topographic<options>
-    <option value="Imagery">Imagery<options>
-    <option value="ShadedRelief">Shaded Relief<options>
-    <option value="Terrain">Terrain</option>
-    <option value="NationalGeographic">National Geographic<options>
-    <option value="Streets">Streets</option>
-  </select>
-</div>
-
-<script>
-  var map = L.map('map').setView([36.5786, -118.2920], 14);
-  var layer = L.esri.basemapLayer('Topographic').addTo(map);
-  var peaksGeoJSONUrl = './data/peaks.geojson';
-  var geojsonLayer = new L.GeoJSON.AJAX(peaksGeoJSONUrl).addTo(map);
-  var layerLabels;
-
-  function setBasemap(basemap) {
-    if (layer) {
-      map.removeLayer(layer);
+    // switch basemap and basemap label layers
+    function setBasemap(basemap) {
+      if (basemapLayer) {
+        map.removeLayer(basemapLayer);
+      }
+      basemapLayer = L.esri.basemapLayer(basemap);
+      map.addLayer(basemapLayer);
+      if (basemapLabelsLayer) {
+        map.removeLayer(basemapLabelsLayer);
+      }
+      if (basemap === 'Imagery' || basemap === 'Terrain') {
+        basemapLabelsLayer = L.esri.basemapLayer(basemap + 'Labels');
+        map.addLayer(basemapLabelsLayer);
+      }
     }
-    layer = L.esri.basemapLayer(basemap);
-    map.addLayer(layer);
-    if (layerLabels) {
-      map.removeLayer(layerLabels);
-    }
 
-    if (basemap === 'ShadedRelief' || basemap === 'Imagery' || basemap === 'Terrain') {
-
-      layerLabels = L.esri.basemapLayer(basemap + 'Labels');
-      map.addLayer(layerLabels);
-    }
-  }
-
-  var basemaps = document.getElementById('basemaps');
-
-  basemaps.addEventListener('change', function(){
-    setBasemap(basemaps.value);
-  });
-</script>
-
+    // wire up basemap change event
+    basemapDropdown.addEventListener('change', function(){
+      setBasemap(this.value);
+    });
+  })(L);
+  </script>
 </body>
 </html>
