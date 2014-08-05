@@ -3,8 +3,9 @@
   <meta charset=utf-8 />
   <title>Sierra Peaks Map</title>
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-  <!-- Load Leaflet CSS from CDN-->
+  <!-- Load Leaflet and plugin CSS from CDN-->
   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <link rel="stylesheet" type="text/css" href="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.3/esri-leaflet-geocoder.css">
   <!-- app css -->
   <style>
     body {
@@ -16,8 +17,8 @@
     #map {position: absolute;top:0;bottom:0;right:0;left:0;}
     #basemaps-wrapper {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
+      top: 10px;
+      right: 10px;
       z-index: 10;
       background: white;
       padding: 10px;
@@ -42,6 +43,7 @@
   <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
   <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
   <script src="http://rawgit.com/calvinmetcalf/leaflet-ajax/master/dist/leaflet.ajax.min.js"></script>
+  <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.3/esri-leaflet-geocoder.js"></script>
   <!-- app script -->
   <script>
   (function (L) {
@@ -69,6 +71,23 @@
     }
 
     // TODO: add trailheads
+
+    // add geocoder
+    var searchControl = new L.esri.Controls.Geosearch({
+      zoomToResult: false,
+      allowMultipleResults: false
+    }).addTo(map);
+    searchControl.on('results', function(data){
+      // for (var i = data.results.length - 1; i >= 0; i--) {
+        // var result = data.results[i];
+        var result = data.results[0];
+        map.panTo(result.latlng);
+        L.popup()
+          .setLatLng(result.latlng)
+          .setContent(result.text)
+          .openOn(map);
+        // };
+    });
 
     // switch basemap and basemap label layers
     function setBasemap(basemap) {
