@@ -7,6 +7,8 @@
     <!-- Load Leaflet and plugin CSS from CDN-->
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <link rel="stylesheet" type="text/css" href="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.3/esri-leaflet-geocoder.css">
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css">
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css">
     <!-- app css -->
     <style>
     body {
@@ -53,6 +55,7 @@
     <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
     <script src="http://rawgit.com/calvinmetcalf/leaflet-ajax/master/dist/leaflet.ajax.min.js"></script>
     <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.3/esri-leaflet-geocoder.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
     <!-- app script -->
     <script>
     (function(L) {
@@ -68,16 +71,22 @@
             iconAnchor: [22, 22]
         });
 
+        var markers = L.markerClusterGroup();
+
         // add peaks
         var peaksGeoJSONUrl = './data/peaks.geojson';
-        new L.GeoJSON.AJAX(peaksGeoJSONUrl, {
+        var peaksLayer = new L.GeoJSON.AJAX(peaksGeoJSONUrl, {
             pointToLayer: function(feature, latlng) {
-                return L.marker(latlng, {
+                var marker = L.marker(latlng, {
                     icon: mountainsIcon
                 });
+                markers.addLayer(marker);
+                return marker;
             },
             onEachFeature: peaksPopup
-        }).addTo(map);
+        }); //.addTo(map);
+
+        map.addLayer(markers);
 
         // show popup for peak
         function peaksPopup(feature, layer) {
