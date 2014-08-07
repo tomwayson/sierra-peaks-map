@@ -62,9 +62,20 @@
         var basemapDropdown = document.getElementById('basemaps');
         var basemapLabelsLayer;
 
+        var mountainsIcon = L.icon({
+            iconUrl: './images/mountainMarker.png',
+            iconSize: [25, 41],
+            iconAnchor: [22, 22]
+        });
+
+        L.marker([36.5486, -118.2920], {icon: mountainsIcon}).addTo(map);
+
         // add peaks
         var peaksGeoJSONUrl = './data/peaks.geojson';
         new L.GeoJSON.AJAX(peaksGeoJSONUrl, {
+        	pointToLayer: function (feature, latlng) {
+				return L.marker(latlng, {icon: mountainsIcon});
+			},
             onEachFeature: peaksPopup
         }).addTo(map);
 
@@ -80,9 +91,9 @@
                 var geom = feature.geometry;
                 if (geom) {
                     var coordinates = geom.coordinates;
-                    var NS = (coordinates[1] < 0 ? 'S': 'N');
-                    var EW = (coordinates[1] < 0 ? 'E': 'W');
-                    content += '<br />' + Math.abs(coordinates[1]) + '° '+NS+', ' + Math.abs(coordinates[0])+'° '+EW;
+                    var NS = (coordinates[1] < 0 ? 'S' : 'N');
+                    var EW = (coordinates[1] < 0 ? 'E' : 'W');
+                    content += '<br />' + Math.abs(coordinates[1]) + '° ' + NS + ', ' + Math.abs(coordinates[0]) + '° ' + EW;
                 }
                 layer.bindPopup(content);
             }
