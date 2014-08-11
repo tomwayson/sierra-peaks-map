@@ -101,7 +101,7 @@
                 if (geom) {
                     var coordinates = geom.coordinates;
                     var NS = (coordinates[1] < 0 ? 'S' : 'N');
-                    var EW = (coordinates[1] < 0 ? 'E' : 'W');
+                    var EW = (coordinates[0] < 0 ? 'W' : 'E');
                     content += '<br />' + Math.abs(coordinates[1]) + '° ' + NS + ', ' + Math.abs(coordinates[0]) + '° ' + EW;
                 }
                 layer.bindPopup(content);
