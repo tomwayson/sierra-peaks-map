@@ -52,14 +52,42 @@
     </div>
     <!-- Load Leaflet and plugins from CDN -->
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.5/esri-leaflet.js"></script>
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/0.0.1-beta.6/esri-leaflet.js"></script>
     <script src="http://rawgit.com/calvinmetcalf/leaflet-ajax/master/dist/leaflet.ajax.min.js"></script>
     <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/0.0.1-beta.3/esri-leaflet-geocoder.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
     <!-- app script -->
     <script>
     (function(L) {
+
+        // switch basemap and basemap label layers
+        function setBasemap(basemap) {
+            if (basemapLayer) {
+                map.removeLayer(basemapLayer);
+            }
+            basemapLayer = L.esri.basemapLayer(basemap);
+            map.addLayer(basemapLayer);
+            if (basemapLabelsLayer) {
+                map.removeLayer(basemapLabelsLayer);
+            }
+            if (basemap === 'Imagery' || basemap === 'Terrain') {
+                basemapLabelsLayer = L.esri.basemapLayer(basemap + 'Labels');
+                map.addLayer(basemapLabelsLayer);
+            }
+        }
+
+        // format lat lng display
+        function formatLatLng(lat, lng) {
+            var NS = (lat < 0 ? 'S' : 'N');
+            var EW = (lng < 0 ? 'W' : 'E');
+            return Math.abs(lat).toFixed(3) + '° ' + NS + ', ' + Math.abs(lng).toFixed(3) + '° ' + EW;
+        }
+
+        // DEM service is not CORS enabled, so have to use JSONP
+        L.esri.get = L.esri.Request.get.JSONP;
+
         // init map w/ basemap
+        var FEET_PER_METER = 3.28084;
         var map = L.map('map').setView([36.5786, -118.2920], 14);
         var basemapLayer = L.esri.basemapLayer('Topographic').addTo(map);
         var basemapDropdown = document.getElementById('basemaps');
@@ -94,15 +122,11 @@
             var content;
             if (props) {
                 content = '<a href="' + props.sp_url + '" target="_blank">' + props.name;
-                content += '</a> <br />' + props.elevation + ' ft'
-                content += '&nbsp;&nbsp;/&nbsp;&nbsp;';
-                content += Math.round(props.elevation * 0.3048) + ' m';
+                content += '</a> <br />' + props.elevation + ' ft&nbsp;&nbsp;/&nbsp;&nbsp;';
+                content += Math.round(props.elevation / FEET_PER_METER) + ' m';
                 var geom = feature.geometry;
                 if (geom) {
-                    var coordinates = geom.coordinates;
-                    var NS = (coordinates[1] < 0 ? 'S' : 'N');
-                    var EW = (coordinates[0] < 0 ? 'W' : 'E');
-                    content += '<br />' + Math.abs(coordinates[1]) + '° ' + NS + ', ' + Math.abs(coordinates[0]) + '° ' + EW;
+                    content += '<br />' + formatLatLng(geom.coordinates[1], geom.coordinates[0]);
                 }
                 layer.bindPopup(content);
             }
@@ -116,32 +140,30 @@
             allowMultipleResults: false
         }).addTo(map);
         searchControl.on('results', function(data) {
-            // for (var i = data.results.length - 1; i >= 0; i--) {
-            // var result = data.results[i];
+            // TODO: handle multiple results
             var result = data.results[0];
             map.panTo(result.latlng);
-            L.popup()
-                .setLatLng(result.latlng)
-                .setContent(result.text)
-                .openOn(map);
-            // };
+            L.popup().setLatLng(result.latlng).setContent(result.text).openOn(map);
         });
 
-        // switch basemap and basemap label layers
-        function setBasemap(basemap) {
-            if (basemapLayer) {
-                map.removeLayer(basemapLayer);
-            }
-            basemapLayer = L.esri.basemapLayer(basemap);
-            map.addLayer(basemapLayer);
-            if (basemapLabelsLayer) {
-                map.removeLayer(basemapLabelsLayer);
-            }
-            if (basemap === 'Imagery' || basemap === 'Terrain') {
-                basemapLabelsLayer = L.esri.basemapLayer(basemap + 'Labels');
-                map.addLayer(basemapLabelsLayer);
-            }
-        }
+        // get elevation on map click
+        var identify = L.esri.Tasks.identifyImage('http://sampleserver3.arcgisonline.com/ArcGIS/rest/services/Earthquakes/CaliforniaDEM/ImageServer');
+        map.on('click', function (e) {
+            // TODO: no double clicks
+            identify.at(e.latlng).run(function(error, results) {
+                var elevation;
+                var content;
+                if (error) {
+                    console.log(error);
+                } else {
+                    elevation = results.pixel.properties.value;
+                    content = Math.round(elevation * FEET_PER_METER) + ' ft&nbsp;&nbsp;/&nbsp;&nbsp;';
+                    content += elevation + ' m';
+                    content += '<br /> ' + formatLatLng(e.latlng.lat, e.latlng.lng);
+                    L.popup().setLatLng(e.latlng).setContent(content).openOn(map);
+                }
+            });
+        });
 
         // wire up basemap change event
         basemapDropdown.addEventListener('change', function() {
