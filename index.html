@@ -74,7 +74,7 @@
         var markers = L.markerClusterGroup();
 
         // add peaks
-        var peaksGeoJSONUrl = './data/peaks.geojson';
+        var peaksGeoJSONUrl = './data/Sierra-Peaks/geojson/peaks.geojson';
         var peaksLayer = new L.GeoJSON.AJAX(peaksGeoJSONUrl, {
             pointToLayer: function(feature, latlng) {
                 var marker = L.marker(latlng, {

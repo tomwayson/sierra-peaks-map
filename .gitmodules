@@ -1,0 +1,3 @@
+[submodule "data/Sierra-Peaks"]
+	path = data/Sierra-Peaks
+	url = https://github.com/egoldblum/Sierra-Peaks.git
