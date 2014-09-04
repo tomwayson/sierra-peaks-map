@@ -99,7 +99,9 @@
             iconAnchor: [22, 22]
         });
 
-        var markers = L.markerClusterGroup();
+        var markers = L.markerClusterGroup({
+            disableClusteringAtZoom: 14
+        });
 
         // add peaks
         var peaksGeoJSONUrl = './data/Sierra-Peaks/geojson/peaks.geojson';
